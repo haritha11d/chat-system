@@ -36,7 +36,46 @@ except:
 nick_load = "NICK " + nick
 client.sendall((nick_load).encode('ascii'))
 response = client.recv(1024).decode('ascii')
-if response == 'Error' or response == 'ERROR':
+if response.upper() == 'ERROR':
     print(response)
     sys.exit(1)
 print(response)
+
+'''
+develop the code for protocol part 3
+Client : MSG <text> --> Server
+Server: MSG nick <text> / ERROR <text> --> Client
+'''
+
+while True:
+    sockets = [sys.stdin, client] # reading sockets
+    # just have to read sockets either from stdin or client socket (from server)
+    read_sockets, write_sockets, error_sockets = select.select(sockets, [], [])
+    for socket in read_sockets:
+        # if there is a receiving socket from the server
+        if socket == client:
+            msg = client.recv(1024).decode('ascii')
+            if (msg.upper() == 'ERROR'):
+                print(msg)
+            else:
+                # strip out the MSG part
+                msg = msg[4:]
+                print(msg)
+        # take the standard input from user!
+        else:
+            msg = sys.stdin.readline()
+            if (msg == '\n'):
+                continue
+            else:
+                msg_load = 'MSG ' + msg
+                client.sendall((msg_load).encode('ascii'))
+
+# close the connection to server (client socket)
+client.close()
+
+
+
+
+
+
+
