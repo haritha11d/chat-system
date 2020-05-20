@@ -23,3 +23,11 @@ try:
     print("connected to server at address " + ip + ":" + str(port) + '\n')
 except:
     print("Not able to connect to server at address " + ip + ":" + str(port) + '\n' + "Exiting :)")
+
+# protocol part 1.2 receiving Hello <VERSION> from server
+try:
+    hello = client.recv(1024).decode('ascii')
+    print(hello)
+except:
+    print("Not able to receive Hello <VERSION> msg from the server at address " + ip + ":" + str(port) + '\n' + "Exiting :)")
+
