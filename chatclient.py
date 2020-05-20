@@ -8,3 +8,5 @@ import socket
 if len(sys.argv) != 3:
     print("Usage: ./chat-client <server-ip>:<portnum> nick")
     sys.exit(1)
+else:
+    print("All arguments given correct!")
