@@ -20,7 +20,7 @@ nick = str(sys.argv[2])
 client = socket.socket()
 try:
     client.connect((ip,port))
-    print("connected to server at address " + ip + ":" + str(port) + '\n')
+   # print("connected to server at address " + ip + ":" + str(port) + '\n')
 except:
     print("Not able to connect to server at address " + ip + ":" + str(port) + '\n' + "Exiting :)")
     sys.exit(1)
@@ -36,7 +36,7 @@ except:
 nick_load = "NICK " + nick
 client.sendall((nick_load).encode('ascii'))
 response = client.recv(1024).decode('ascii')
-if response.upper() == 'ERROR':
+if response[:5].upper() == 'ERROR':
     print(response)
     sys.exit(1)
 print(response)
@@ -55,7 +55,7 @@ while True:
         # if there is a receiving socket from the server
         if socket == client:
             msg = client.recv(1024).decode('ascii')
-            if (msg.upper() == 'ERROR'):
+            if (msg[:5].upper() == 'ERROR'):
                 print(msg)
             else:
                 # strip out the MSG part
@@ -72,10 +72,4 @@ while True:
 
 # close the connection to server (client socket)
 client.close()
-
-
-
-
-
-
 
