@@ -1,4 +1,5 @@
 #!/usr/bin python3
+import re
 import sys
 import socket
 import select
@@ -16,21 +17,19 @@ port = str(args[1])
 server.bind(ip, port)
 # listen for atmost 100 connections
 server.listen(100)
-clients = []
-clients.append(server)
+clients = [server]
 clients_hashmap = {}
-perm_clients = []
+clients_in_queue = []
 
 
 def broadcast(msg, conn):
-    for client in perm_clients:
+    for client in clients_hashmap.keys():
         if client!=conn:
             print("Broadcasting")
             try:
                 client.sendall(msg.encode('ascii'))
             except:
                 client.close()
-                perm_clients.remove(client)
                 del clients_hashmap[client]
                 clients.remove(client)
 
@@ -44,6 +43,29 @@ def main():
                 newclient, addr = server.accept()
                 newclient.sendall("Hello 1".encode('ascii'))
                 clients.append(newclient)
-            elif socket in
+                clients_in_queue.append(newclient)
+            elif socket in clients_in_queue:
+                try:
+                    name_load = socket.recv(1024).decode('ascii')
+                    if name_load:
+                        check = re.search(r'NICK\s(\S*)',name_load)
+                        name = str(check.group(1))
+                        if len(name)>12:
+                            socket.sendall("ERROR".encode('ascii'))
+                        elif re.search(r'!',name_load):
+                            socket.sendall("ERROR")
+                        elif check:
+                            socket.sendall(("Welcome to chat room" + str(name)).encode('ascii'))
+                            clients_hashmap[socket] = name
+                            clients_in_queue.remove(socket)
+                        else:
+                            socket.sendall("ERROR".encode('ascii'))
+                    else:
+                        socket.close()
+                        clients.remove(socket)
+                        clients_in_queue.remove(socket)
+                except:
+                    continue
+
 
 
