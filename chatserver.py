@@ -9,12 +9,12 @@ server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 if (len(sys.argv) != 2):
     print("Usage: ./chatserver <server-ip>:<port>")
     sys.exit(1)
-args = str(sys.argv[1].split(':'))
+args = sys.argv[1].split(':')
 ip = str(args[0])
-port = str(args[1])
+port = int(args[1])
 
 # bind the (ip,port) to the server
-server.bind(ip, port)
+server.bind((ip, port))
 # listen for atmost 100 connections
 server.listen(100)
 clients = [server]
@@ -55,7 +55,7 @@ def main():
                         elif re.search(r'!',name_load):
                             socket.sendall("ERROR")
                         elif check:
-                            socket.sendall(("Welcome to chat room" + str(name)).encode('ascii'))
+                            socket.sendall(("Welcome to chat room " + str(name)).encode('ascii'))
                             clients_hashmap[socket] = name
                             clients_in_queue.remove(socket)
                         else:
@@ -66,6 +66,26 @@ def main():
                         clients_in_queue.remove(socket)
                 except:
                     continue
-
+            elif socket in clients_hashmap.keys():
+                try:
+                    message = socket.recv(1024).decode('ascii')
+                    if message:
+                        check = message[:3] == 'MSG'
+                        if (len(message))>259:
+                            socket.sendall("ERROR".encode('ascii'))
+                        elif check:
+                            message_load = "MSG " + str(clients_hashmap[socket]) + ": " + message[4:]
+                            broadcast(message_load, socket)
+                        else:
+                            socket.sendall("ERROR malformed command".encode('ascii'))
+                    else:
+                        socket.close()
+                        clients.remove(socket)
+                        del clients_hashmap[socket]
+                except:
+                    continue
+    server.close()
+if __name__ == '__main__':
+    main()
 
 
