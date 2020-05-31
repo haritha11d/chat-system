@@ -6,7 +6,7 @@ import select
 
 server = socket.socket()
 server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-if (len(sys.argv) != 2):
+if len(sys.argv) != 2:
     print("Usage: ./chatserver <server-ip>:<port>")
     sys.exit(1)
 args = sys.argv[1].split(':')
@@ -24,7 +24,7 @@ clients_in_queue = []
 
 def broadcast(msg, conn):
     for client in clients_hashmap.keys():
-        if client!=conn:
+        if client != conn:
             print("Broadcasting")
             try:
                 client.sendall(msg.encode('ascii'))
@@ -32,6 +32,7 @@ def broadcast(msg, conn):
                 client.close()
                 del clients_hashmap[client]
                 clients.remove(client)
+
 
 def main():
     print("Chat Server running")
@@ -48,18 +49,25 @@ def main():
                 try:
                     name_load = socket.recv(1024).decode('ascii')
                     if name_load:
-                        check = re.search(r'NICK\s(\S*)',name_load)
+                        check = re.search(r'NICK\s(\S*)', name_load)
                         name = str(check.group(1))
-                        if len(name)>12:
-                            socket.sendall("ERROR".encode('ascii'))
-                        elif re.search(r'!',name_load):
-                            socket.sendall("ERROR")
+                        if len(name) > 12:
+                            socket.sendall("ERROR nickname should not be greater than 12 characters ".encode('ascii'))
+                        elif (re.search(r'!', name) or re.search(r'@', name) or re.search(r'#', name) or re.search(
+                                r'\$', name) or re.search(r'%', name) or re.search(r'\*', name) or re.search(r'\^',
+                                                                                                             name)):
+                            socket.sendall("ERROR don't use special characters in the nick name")
                         elif check:
-                            socket.sendall(("Welcome to chat room " + str(name)).encode('ascii'))
+                            socket.sendall(("OK\n".encode('ascii')))
                             clients_hashmap[socket] = name
                             clients_in_queue.remove(socket)
                         else:
-                            socket.sendall("ERROR".encode('ascii'))
+                            if name_load[:3] == "MSG":
+                                socket.sendall("ERROR no nick set".encode('ascii'))
+                            elif name_load[-4:] == 'NICK':
+                                socket.sendall("ERROR malformed command".encode('ascii'))
+                            else:
+                                socket.sendall("ERROR malformed command".encode('ascii'))
                     else:
                         socket.close()
                         clients.remove(socket)
@@ -71,8 +79,8 @@ def main():
                     message = socket.recv(1024).decode('ascii')
                     if message:
                         check = message[:3] == 'MSG'
-                        if (len(message))>259:
-                            socket.sendall("ERROR".encode('ascii'))
+                        if (len(message)) > 259:
+                            socket.sendall("ERROR message length should not exceed 256 characters".encode('ascii'))
                         elif check:
                             message_load = "MSG " + str(clients_hashmap[socket]) + ": " + message[4:]
                             broadcast(message_load, socket)
@@ -85,7 +93,7 @@ def main():
                 except:
                     continue
     server.close()
+
+
 if __name__ == '__main__':
     main()
-
-
